@@ -8,6 +8,9 @@ from app.modules.profile.models import UserProfile
 from app.modules.profile.repositories import UserProfileRepository
 from core.configuration.configuration import uploads_folder_name
 from core.services.BaseService import BaseService
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 
 
 class AuthenticationService(BaseService):
@@ -19,6 +22,12 @@ class AuthenticationService(BaseService):
         user = self.repository.get_by_email(email)
         if user is not None and user.check_password(password):
             login_user(user, remember=remember)
+            return True
+        return False
+
+    def correct_credentials(self, email, password, remember=False):
+        user = self.repository.get_by_email(email)
+        if user is not None and user.check_password(password):
             return True
         return False
 
@@ -79,3 +88,25 @@ class AuthenticationService(BaseService):
 
     def temp_folder_by_user(self, user: User) -> str:
         return os.path.join(uploads_folder_name(), "temp", str(user.id))
+
+    def send_email(target_email, random_key):
+        sender_email = "uvlhub.auto.communication@gmail.com"    # TODO Create the gmail account
+        receiver_email = "recipient_email@example.com"          # TODO Find a way to get the user email
+        password = ""                                           # TODO Add gmail account password
+        subject = "[UVLHUB] Your key is "+random_key+"!"
+        body = "Hello, \n\nThis is an automated email sent from UVLHUB!\nYour authentication key is "+random_key+" ."
+        message = MIMEMultipart()
+        message["From"] = target_email
+        message["To"] = receiver_email
+        message["Subject"] = subject
+        message.attach(MIMEText(body, "plain"))
+        smtp_server = "smtp.gmail.com"
+        smtp_port = 587  # TLS port
+        try:
+            with smtplib.SMTP(smtp_server, smtp_port) as server:
+                server.starttls()
+                server.login(sender_email, password)
+                server.sendmail(sender_email, receiver_email, message.as_string())
+                print("Email sent successfully!")
+        except Exception as e:
+            print(f"Error: {e}")

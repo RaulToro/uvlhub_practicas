@@ -114,7 +114,7 @@ class AuthenticationService(BaseService):
                     <p>To complete your authentication process, please use the following <span class="bold">
                     authentication key</span>:</p>
                     <p class="bold">{random_key}</p>
-                    <p>Please enter this key in the authentication form to proceed. If you did not request this key or 
+                    <p>Please enter this key in the authentication form to proceed. If you did not request this key or
                     believe this is an error, please contact our support team immediately.</p>
                     <p>For your security, this key is valid for a limited time only.</p>
                     <p>Best regards,</p>

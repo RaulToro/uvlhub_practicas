@@ -29,7 +29,7 @@ def show_signup_form():
 
         # Log user
         login_user(user, remember=True)
-        return redirect(url_for('auth.email_validation'))
+        return redirect(url_for('auth.email_validation', customer_email=form.email.data, customer_password=form.password.data))
 
     return render_template("auth/signup_form.html", form=form)
 
@@ -42,7 +42,7 @@ def login():
     form = LoginForm()
     if request.method == 'POST' and form.validate_on_submit():
         if authentication_service.correct_credentials(form.email.data, form.password.data):
-            return redirect(url_for('auth.email_validation'))
+            return redirect(url_for('auth.email_validation', values=[form.email.data, form.password.data]))
 
         return render_template("auth/login_form.html", form=form, error='Invalid credentials')
 
@@ -50,21 +50,19 @@ def login():
 
 
 @auth_bp.route('/email_validation', methods=['GET', 'POST'])
-def email_validation():
+def email_validation(values=[]):
     if current_user.is_authenticated:
         return redirect(url_for('public.index'))
 
     # Creation of the key
-    random_key = random.randint(100000, 999999)
-    # TODO Add the actual customer email
-    target_email = 'customer@gmail.com'
-    authentication_service.send_email(target_email, random_key)
+    # random_key = random.randint(100000, 999999)
+    random_key = 123456
+    authentication_service.send_email(values[1])
     # Actual validation
     form = EmailValidationForm()
     if request.method == 'POST' and form.validate_on_submit():
-        if form.key.data == random_key:
-            if authentication_service.login(form.email.data, form.password.data):
-                return redirect(url_for('public.index'))
+        if int(form.key.data) == int(random_key) & authentication_service.login(values[1], values=[2]):
+            return redirect(url_for('public.index'))
 
         return render_template("auth.email_validation_form.html", form=form, error='The key does not match')
 

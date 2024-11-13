@@ -89,12 +89,12 @@ class AuthenticationService(BaseService):
     def temp_folder_by_user(self, user: User) -> str:
         return os.path.join(uploads_folder_name(), "temp", str(user.id))
 
-    def send_email(target_email, random_key):
+    def send_email(self, target_email, random_key):
         sender_email = "uvlhub.auto.communication@gmail.com"    # TODO Create the gmail account
-        receiver_email = "recipient_email@example.com"          # TODO Find a way to get the user email
+        receiver_email = target_email         # TODO Find a way to get the user email
         password = ""                                           # TODO Add gmail account password
-        subject = "[UVLHUB] Your key is "+random_key+"!"
-        body = "Hello, \n\nThis is an automated email sent from UVLHUB!\nYour authentication key is "+random_key+" ."
+        subject = "[UVLHUB] Your key is "+str(random_key)+"!"
+        body = "Hello,\n\nThis is an automated email sent from UVLHUB!\nYour authentication key is "+str(random_key)+"."
         message = MIMEMultipart()
         message["From"] = target_email
         message["To"] = receiver_email

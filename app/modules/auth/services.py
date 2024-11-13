@@ -93,13 +93,41 @@ class AuthenticationService(BaseService):
         sender_email = "uvlhub.reply@gmail.com"    # TODO Create the gmail account
         receiver_email = target_email                           # TODO Find a way to get the user email
         password = "fdqqdofcvxvcjgit "                                           # TODO Add gmail account password
-        subject = "[UVLHUB] Your key is "+str(random_key)+"!"
-        body = "Hello,\n\nThis is an automated email sent from UVLHUB!\nYour authentication key is "+str(random_key)+"."
+        subject = "[UVLHUB] Your key is {random_key}!"
+        body = f"""
+                <html>
+                <head>
+                    <style>
+                        body {{
+                            font-family: Arial, sans-serif;
+                            line-height: 1.6;
+                        }}
+                        .bold {{
+                            font-weight: bold;
+                        }}
+                    </style>
+                </head>
+                <body>
+                    <p>Hello,</p>
+                    <p>Thank you for using <span class="bold">UVLHUB</span>!</p>
+                    <p>We are excited to help you secure your account.</p>
+                    <p>To complete your authentication process, please use the following <span class="bold">
+                    authentication key</span>:</p>
+                    <p class="bold">{random_key}</p>
+                    <p>Please enter this key in the authentication form to proceed. If you did not request this key or 
+                    believe this is an error, please contact our support team immediately.</p>
+                    <p>For your security, this key is valid for a limited time only.</p>
+                    <p>Best regards,</p>
+                    <p><span class="bold">The UVLHUB Team</span></p>
+                    <p><a href="mailto:support@uvlhub.com">Contact us</a> if you need assistance.</p>
+                </body>
+                </html>
+                """
         message = MIMEMultipart()
         message["From"] = target_email
         message["To"] = receiver_email
         message["Subject"] = subject
-        message.attach(MIMEText(body, "plain"))
+        message.attach(MIMEText(body, "html"))
         smtp_server = "smtp.gmail.com"
         smtp_port = 587  # TLS port
         try:

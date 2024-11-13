@@ -90,9 +90,9 @@ class AuthenticationService(BaseService):
         return os.path.join(uploads_folder_name(), "temp", str(user.id))
 
     def send_email(self, target_email, random_key):
-        sender_email = "uvlhub.auto.communication@gmail.com"    # TODO Create the gmail account
-        receiver_email = target_email         # TODO Find a way to get the user email
-        password = ""                                           # TODO Add gmail account password
+        sender_email = "uvlhub.reply@gmail.com"    # TODO Create the gmail account
+        receiver_email = target_email                           # TODO Find a way to get the user email
+        password = "fdqqdofcvxvcjgit "                                           # TODO Add gmail account password
         subject = "[UVLHUB] Your key is "+str(random_key)+"!"
         body = "Hello,\n\nThis is an automated email sent from UVLHUB!\nYour authentication key is "+str(random_key)+"."
         message = MIMEMultipart()
@@ -107,6 +107,6 @@ class AuthenticationService(BaseService):
                 server.starttls()
                 server.login(sender_email, password)
                 server.sendmail(sender_email, receiver_email, message.as_string())
-                print("Email sent successfully!")
+                print("Email sent successfully to "+str(target_email)+"!")
         except Exception as e:
             print(f"Error: {e}")

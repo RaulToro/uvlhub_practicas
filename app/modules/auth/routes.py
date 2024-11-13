@@ -1,4 +1,4 @@
-from flask import render_template, redirect, url_for, request, make_response
+from flask import render_template, redirect, url_for, request, make_response, session
 from flask_login import current_user, logout_user
 
 from app.modules.auth import auth_bp
@@ -44,7 +44,6 @@ def login():
     form = LoginForm()
     if request.method == 'POST' and form.validate_on_submit():
         if authentication_service.correct_credentials(form.email.data, form.password.data):
-            # Encrypt and store email and password in cookies
             response = make_response(redirect(url_for('auth.email_validation')))
             response.set_cookie('email', form.email.data, max_age=3600, secure=True, httponly=True)
             response.set_cookie('password', form.password.data, max_age=3600, secure=True, httponly=True)
@@ -65,21 +64,25 @@ def email_validation():
     if not email or not password:
         return redirect(url_for('auth.login'))
 
-    # Creation of the key
-    # random_key = random.randint(100000, 999999)
-    random_key = 123456
-    authentication_service.send_email(email, random_key)
-    # Actual validation
     form = EmailValidationForm()
+    if request.method == 'GET':
+        random_key = random.randint(100000, 999999)
+        session['key'] = random_key
+        authentication_service.send_email(email, random_key)
     if request.method == 'POST' and form.validate_on_submit():
-        if (int(form.key.data) == int(random_key)) & authentication_service.correct_credentials(email, password):
+        if int(form.key.data.strip()) == int(session.get('key')):
             authentication_service.login(email, password)
             response = make_response(redirect(url_for('public.index')))
             response.delete_cookie('email')
             response.delete_cookie('password')
             return response
 
-        return render_template("auth/email_validation_form.html", form=form, email=email, error='The key does not match')
+        return render_template(
+            "auth/email_validation_form.html",
+            form=form,
+            email=email,
+            error='The key does not match'
+        )
 
     return render_template('auth/email_validation_form.html', form=form, email=email)
 

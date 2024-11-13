@@ -1,5 +1,5 @@
-from flask import render_template, redirect, url_for, request
-from flask_login import current_user, login_user, logout_user
+from flask import render_template, redirect, url_for, request, make_response
+from flask_login import current_user, logout_user
 
 from app.modules.auth import auth_bp
 from app.modules.auth.forms import SignupForm, LoginForm, EmailValidationForm
@@ -23,13 +23,15 @@ def show_signup_form():
             return render_template("auth/signup_form.html", form=form, error=f'Email {email} in use')
 
         try:
-            user = authentication_service.create_with_profile(**form.data)
+            authentication_service.create_with_profile(**form.data)
         except Exception as exc:
             return render_template("auth/signup_form.html", form=form, error=f'Error creating user: {exc}')
 
         # Log user
-        login_user(user, remember=True)
-        return redirect(url_for('auth.email_validation', customer_email=form.email.data, customer_password=form.password.data))
+        response = make_response(redirect(url_for('auth.email_validation')))
+        response.set_cookie('email', form.email.data, max_age=3600, secure=True, httponly=True)
+        response.set_cookie('password', form.password.data, max_age=3600, secure=True, httponly=True)
+        return response
 
     return render_template("auth/signup_form.html", form=form)
 
@@ -42,7 +44,11 @@ def login():
     form = LoginForm()
     if request.method == 'POST' and form.validate_on_submit():
         if authentication_service.correct_credentials(form.email.data, form.password.data):
-            return redirect(url_for('auth.email_validation', values=[form.email.data, form.password.data]))
+            # Encrypt and store email and password in cookies
+            response = make_response(redirect(url_for('auth.email_validation')))
+            response.set_cookie('email', form.email.data, max_age=3600, secure=True, httponly=True)
+            response.set_cookie('password', form.password.data, max_age=3600, secure=True, httponly=True)
+            return response
 
         return render_template("auth/login_form.html", form=form, error='Invalid credentials')
 
@@ -50,21 +56,30 @@ def login():
 
 
 @auth_bp.route('/email_validation', methods=['GET', 'POST'])
-def email_validation(values=[]):
+def email_validation():
     if current_user.is_authenticated:
         return redirect(url_for('public.index'))
+
+    email = request.cookies.get('email')
+    password = request.cookies.get('password')
+    if not email or not password:
+        return redirect(url_for('auth.login'))
 
     # Creation of the key
     # random_key = random.randint(100000, 999999)
     random_key = 123456
-    authentication_service.send_email(values[1])
+    authentication_service.send_email(email, random_key)
     # Actual validation
     form = EmailValidationForm()
     if request.method == 'POST' and form.validate_on_submit():
-        if int(form.key.data) == int(random_key) & authentication_service.login(values[1], values=[2]):
-            return redirect(url_for('public.index'))
+        if (int(form.key.data) == int(random_key)) & authentication_service.correct_credentials(email, password):
+            authentication_service.login(email, password)
+            response = make_response(redirect(url_for('public.index')))
+            response.delete_cookie('email')
+            response.delete_cookie('password')
+            return response
 
-        return render_template("auth.email_validation_form.html", form=form, error='The key does not match')
+        return render_template("auth/email_validation_form.html", form=form, error='The key does not match')
 
     return render_template('auth/email_validation_form.html', form=form)
 

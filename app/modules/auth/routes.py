@@ -79,9 +79,9 @@ def email_validation():
             response.delete_cookie('password')
             return response
 
-        return render_template("auth/email_validation_form.html", form=form, error='The key does not match')
+        return render_template("auth/email_validation_form.html", form=form, email=email, error='The key does not match')
 
-    return render_template('auth/email_validation_form.html', form=form)
+    return render_template('auth/email_validation_form.html', form=form, email=email)
 
 
 @auth_bp.route('/logout')

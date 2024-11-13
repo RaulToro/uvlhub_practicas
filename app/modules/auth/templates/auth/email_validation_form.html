@@ -16,8 +16,8 @@
 
                         <div class="col-md-6 col-lg-6 col-xs-12">
                             <div class="mb-3">
-                                {{ form.key.label(class="form-label") }}
-                                {{ form.key(class="form-control",placeholder="Enter the key sent to your email. Example: 000000") }}
+                                Enter the {{ form.key.label(class="form-label") }} sent to {{email}}!
+                                {{ form.key(class="form-control",placeholder="Example: 000000") }}
                                 {% for error in form.key.errors %}
                                 <span style="color: red;">{{ error }}</span>
                                 {% endfor %}
